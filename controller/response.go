@@ -3,13 +3,15 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"reflect"
+
+	"github.com/gin-gonic/gin"
 )
 
 // ErrorResponseBody builds the error response body:
-//    { error: "error message" }
+//
+//	{ error: "error message" }
 func ErrorResponseBody(err error) gin.H {
 	return gin.H{
 		"error": err.Error(),
@@ -17,7 +19,9 @@ func ErrorResponseBody(err error) gin.H {
 }
 
 // SuccessResponseBody builds the success response body:
-//    { `model`: { ... } }
+//
+//	{ `model`: { ... } }
+//
 // where the `model` will be replaced by the model's type name.
 // and addition fields can add any k-v to the response body.
 func SuccessResponseBody(model any, addition ...gin.H) gin.H {
@@ -26,7 +30,7 @@ func SuccessResponseBody(model any, addition ...gin.H) gin.H {
 	if model != nil {
 		modelName := getResponseModelName(model)
 		if modelName != "" {
-			res[modelName] = model
+			res["items"] = model
 		}
 	}
 
