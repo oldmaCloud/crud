@@ -1,8 +1,9 @@
-module github.com/cdfmlr/crud
+module github.com/oldmaCloud/crud
 
 go 1.18
 
 require (
+	github.com/cdfmlr/crud v0.0.5
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
