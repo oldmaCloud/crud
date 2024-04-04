@@ -2,8 +2,9 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +30,7 @@ func SuccessResponseBody(model any, addition ...gin.H) gin.H {
 	if model != nil {
 		modelName := getResponseModelName(model)
 		if modelName != "" {
-			res["items"] = model
+			res["data"] = model
 		}
 	}
 
@@ -43,32 +44,32 @@ func SuccessResponseBody(model any, addition ...gin.H) gin.H {
 
 // get a human-readable model name
 func getResponseModelName(model any) string {
-	return "items"
-	// var reflectType = reflect.TypeOf(model)
-	// var reflectValue = reflect.ValueOf(model)
-	// // we can only get the model name from a struct type,
-	// // and if model is a pointer or slice, try to get the element type.
-	// switch reflectType.Kind() {
-	// case reflect.Struct:
-	// 	return reflectType.Name()
-	// case reflect.Ptr:
-	// 	return getResponseModelName(reflectValue.Elem().Interface())
-	// case reflect.Slice, reflect.Array:
-	// 	if reflectType.Elem().Kind() == reflect.Struct {
-	// 		return reflectType.Elem().Name() + "s"
-	// 	}
-	// 	if reflectType.Elem().Kind() == reflect.Ptr && reflectType.Elem().Elem().Kind() == reflect.Struct {
-	// 		return reflectType.Elem().Elem().Name() + "s"
-	// 	}
-	// 	if reflectValue.Len() > 0 {
-	// 		return getResponseModelName(reflectValue.Index(0).Interface()) + "s"
-	// 	}
-	// 	fallthrough
-	// default:
-	// 	logger.WithField("model", fmt.Sprintf("%T", model)).
-	// 		Warn("getResponseModelName: unknown model type, return \"data\"")
-	// 	return "data"
-	// }
+	// return "items"
+	var reflectType = reflect.TypeOf(model)
+	var reflectValue = reflect.ValueOf(model)
+	// we can only get the model name from a struct type,
+	// and if model is a pointer or slice, try to get the element type.
+	switch reflectType.Kind() {
+	case reflect.Struct:
+		return reflectType.Name()
+	case reflect.Ptr:
+		return getResponseModelName(reflectValue.Elem().Interface())
+	case reflect.Slice, reflect.Array:
+		if reflectType.Elem().Kind() == reflect.Struct {
+			return reflectType.Elem().Name() + "s"
+		}
+		if reflectType.Elem().Kind() == reflect.Ptr && reflectType.Elem().Elem().Kind() == reflect.Struct {
+			return reflectType.Elem().Elem().Name() + "s"
+		}
+		if reflectValue.Len() > 0 {
+			return getResponseModelName(reflectValue.Index(0).Interface()) + "s"
+		}
+		fallthrough
+	default:
+		logger.WithField("model", fmt.Sprintf("%T", model)).
+			Warn("getResponseModelName: unknown model type, return \"data\"")
+		return "data"
+	}
 }
 
 // ResponseError writes an error response to client in JSON.
