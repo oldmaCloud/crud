@@ -17,14 +17,16 @@ type Model interface {
 //
 // BasicModel is actually the gorm.Model struct which contains the following
 // fields:
-//    ID, CreatedAt, UpdatedAt, DeletedAt
+//
+//	ID, CreatedAt, UpdatedAt, DeletedAt
 //
 // It is a good idea to embed this struct as the base struct for all models:
-//    type User struct {
-//      orm.BasicModel
-//    }
+//
+//	type User struct {
+//	  orm.BasicModel
+//	}
 type BasicModel gorm.Model
 
 func (m BasicModel) Identity() (fieldName string, value any) {
-	return "ID", m.ID
+	return "id", m.ID
 }
