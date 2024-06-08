@@ -68,14 +68,14 @@ func GetListHandler[T any]() gin.HandlerFunc {
 			} else if strings.HasSuffix(key, "_lt") {
 				fieldName := strings.TrimSuffix(key, "_lt")
 				options2 = append(options2, service.Where(fieldName+" < ? ", value))
-			} else if strings.HasSuffix(key, "_let") {
-				fieldName := strings.TrimSuffix(key, "_lt")
+			} else if strings.HasSuffix(key, "_lte") {
+				fieldName := strings.TrimSuffix(key, "_lte")
 				options2 = append(options2, service.Where(fieldName+" <= ?", value))
-			} else if strings.HasSuffix(key, "_get") {
+			} else if strings.HasSuffix(key, "_gt") {
 				fieldName := strings.TrimSuffix(key, "_gt")
 				options2 = append(options2, service.Where(fieldName+" > ?", value))
-			} else if strings.HasSuffix(key, "_get") {
-				fieldName := strings.TrimSuffix(key, "_get")
+			} else if strings.HasSuffix(key, "_gte") {
+				fieldName := strings.TrimSuffix(key, "_gte")
 				options2 = append(options2, service.Where(fieldName+" >= ?", value))
 			}
 			// 只取每个参数的第一个值
