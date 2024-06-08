@@ -5,7 +5,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
+	"gorm.io/driver/sqlserver"
 )
 
 type DBDriver string
@@ -62,14 +65,14 @@ type DBOpener func(dsn string) gorm.Dialector
 // get DBOpener for the given driver
 func getDBOpener(driver DBDriver) DBOpener {
 	switch driver {
-	// case DBDriverMySQL:
-	// 	return mysql.Open
+	case DBDriverMySQL:
+		return mysql.Open
 	case DBDriverSqlite:
 		return sqlite.Open
-	// case DBDriverPostgres:
-	// 	return postgres.Open
-	// case DBDriverSQLServer:
-	// 	return sqlserver.Open
+	case DBDriverPostgres:
+		return postgres.Open
+	case DBDriverSQLServer:
+		return sqlserver.Open
 	default:
 		//panic("unknown database driver: " + driver)
 		logger.WithField("driver", driver).
