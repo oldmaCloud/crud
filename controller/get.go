@@ -96,7 +96,7 @@ func GetListHandler[T any]() gin.HandlerFunc {
 
 		var addition []gin.H
 		if request.Total {
-			total, err := getCount[T](c, request.FilterBy, request.FilterValue)
+			total, err := service.Count[T](c, options2...) 
 			if err != nil {
 				logger.WithContext(c).WithError(err).
 					Warn("GetListHandler: getCount failed")
