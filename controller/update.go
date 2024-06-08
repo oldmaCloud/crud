@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"reflect"
+
 	"github.com/cdfmlr/crud/log"
 	"github.com/cdfmlr/crud/orm"
 	"github.com/cdfmlr/crud/service"
@@ -8,17 +10,19 @@ import (
 )
 
 // UpdateHandler handles
-//    PUT /T/:idParam
+//
+//	PUT /T/:idParam
+//
 // Updates the model T with the given id.
 //
 // Request body:
-//  - {"field": "new_value", ...}   // fields to update
+//   - {"field": "new_value", ...}   // fields to update
 //
 // Response:
-//  - 200 OK: { updated: true }
-//  - 400 Bad Request: { error: "missing id or bind fields failed" }
-//  - 404 Not Found: { error: "record with id not found" }
-//  - 422 Unprocessable Entity: { error: "update process failed" }
+//   - 200 OK: { updated: true }
+//   - 400 Bad Request: { error: "missing id or bind fields failed" }
+//   - 404 Not Found: { error: "record with id not found" }
+//   - 422 Unprocessable Entity: { error: "update process failed" }
 func UpdateHandler[T orm.Model](idParam string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var model T
@@ -59,6 +63,10 @@ func UpdateHandler[T orm.Model](idParam string) gin.HandlerFunc {
 			return
 		}
 
+		// 获取类型的名称
+		typeName := reflect.TypeOf(model).Name()
+
+		Event.Publish("update:"+typeName, &model)
 		_, err := service.Update(c, &updatedModel)
 		if err != nil {
 			logger.WithContext(c).WithError(err).
@@ -66,6 +74,8 @@ func UpdateHandler[T orm.Model](idParam string) gin.HandlerFunc {
 			ResponseError(c, CodeProcessFailed, err)
 			return
 		}
+
+		Event.Publish("updated"+typeName, &model)
 		ResponseSuccess(c, &updatedModel)
 	}
 }

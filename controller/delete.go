@@ -1,21 +1,25 @@
 package controller
 
 import (
+	"reflect"
+
 	"github.com/cdfmlr/crud/orm"
 	"github.com/cdfmlr/crud/service"
 	"github.com/gin-gonic/gin"
 )
 
 // DeleteHandler handles
-//    DELETE /T/:idParam
+//
+//	DELETE /T/:idParam
+//
 // Deletes the model T with the given id.
 //
 // Request body: none
 //
 // Response:
-//  - 200 OK: { deleted: true }
-//  - 400 Bad Request: { error: "missing id" }
-//  - 422 Unprocessable Entity: { error: "delete process failed" }
+//   - 200 OK: { deleted: true }
+//   - 400 Bad Request: { error: "missing id" }
+//   - 422 Unprocessable Entity: { error: "delete process failed" }
 func DeleteHandler[T orm.Model](idParam string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param(idParam)
@@ -34,24 +38,29 @@ func DeleteHandler[T orm.Model](idParam string) gin.HandlerFunc {
 			ResponseError(c, CodeProcessFailed, err)
 			return
 		}
+		var model T
+		typeName := reflect.TypeOf(model).Name()
+		Event.Publish("deleted"+typeName, &model)
 		ResponseSuccess(c, nil, gin.H{"deleted": true})
 	}
 }
 
 // DeleteNestedHandler handles
-//    DELETE /P/:parentIdParam/T/:childIdParam
+//
+//	DELETE /P/:parentIdParam/T/:childIdParam
+//
 // where:
-//  - P is the parent model, T is the child model
-//  - parentIdParam is the route param name of the parent model P
-//  - childIdParam is the route param name of the child model T in the parent model P
-//  - field is the field name of the child model T in the parent model P
+//   - P is the parent model, T is the child model
+//   - parentIdParam is the route param name of the parent model P
+//   - childIdParam is the route param name of the child model T in the parent model P
+//   - field is the field name of the child model T in the parent model P
 //
 // Request body: none
 //
 // Response:
-//  - 200 OK: { deleted: true }
-//  - 400 Bad Request: { error: "missing id" }
-//  - 422 Unprocessable Entity: { error: "delete process failed" }
+//   - 200 OK: { deleted: true }
+//   - 400 Bad Request: { error: "missing id" }
+//   - 422 Unprocessable Entity: { error: "delete process failed" }
 func DeleteNestedHandler[P orm.Model, T orm.Model](parentIdParam string, field string, childIdParam string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		parentId := c.Param(parentIdParam)
@@ -83,6 +92,7 @@ func DeleteNestedHandler[P orm.Model, T orm.Model](parentIdParam string, field s
 			ResponseError(c, CodeProcessFailed, err)
 			return
 		}
+
 		ResponseSuccess(c, nil, gin.H{"deleted": true})
 	}
 }
