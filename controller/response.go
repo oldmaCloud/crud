@@ -30,7 +30,12 @@ func SuccessResponseBody(model any, addition ...gin.H) gin.H {
 	if model != nil {
 		modelName := getResponseModelName(model)
 		if modelName != "" {
-			res["data"] = model
+			if reflect.TypeOf(model).Kind() == reflect.Slice {
+				res["items"] = model
+			} else {
+				print(reflect.TypeOf(model).Kind())
+				res["data"] = model
+			}
 		}
 	}
 

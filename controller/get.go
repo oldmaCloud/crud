@@ -100,7 +100,7 @@ func GetListHandler[T any]() gin.HandlerFunc {
 		}
 
 		var addition []gin.H
-		if request.Total {
+		if request.PerPage > 0 {
 			total, err := service.Count[T](c, options2...)
 			if err != nil {
 				logger.WithContext(c).WithError(err).
