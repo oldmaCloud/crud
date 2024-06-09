@@ -40,7 +40,7 @@ func DeleteHandler[T orm.Model](idParam string) gin.HandlerFunc {
 		}
 		var model T
 		typeName := reflect.TypeOf(model).Name()
-		Event.Publish("deleted"+typeName, &model)
+		Event.Publish("deleted"+typeName, id)
 		ResponseSuccess(c, nil, gin.H{"deleted": true})
 	}
 }
