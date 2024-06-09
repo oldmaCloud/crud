@@ -21,8 +21,10 @@ import (
 // It is used in GetListHandler, GetByIDHandler and GetFieldHandler, to bind
 // the query parameters in the GET request url.
 type GetRequestOptions struct {
-	Limit       int      `form:"limit"`
-	Offset      int      `form:"offset"`
+	// Limit       int      `form:"limit"`
+	Page    int `form:"page"`
+	PerPage int `form:"perPage"`
+	// Offset      int      `form:"offset"`
 	OrderBy     string   `form:"order_by"`
 	Descending  bool     `form:"desc"`
 	FilterBy    string   `form:"filter_by"`
@@ -206,8 +208,8 @@ func GetFieldHandler[T orm.Model](idParam string, field string) gin.HandlerFunc 
 
 func buildQueryOptions(request GetRequestOptions) []service.QueryOption {
 	var options []service.QueryOption
-	if request.Limit > 0 {
-		options = append(options, service.WithPage(request.Limit, request.Offset))
+	if request.PerPage > 0 && request.Page > 0 {
+		options = append(options, service.WithPage(request.PerPage, request.PerPage*(request.Page-1)))
 	}
 	if request.OrderBy != "" {
 		options = append(options, service.OrderBy(request.OrderBy, request.Descending))
