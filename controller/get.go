@@ -60,6 +60,9 @@ func GetListHandler[T any]() gin.HandlerFunc {
 
 		for key, value2 := range c.Request.URL.Query() {
 			value := value2
+			if len(value2) < 1 || len(value2[0]) < 1 {
+				continue
+			}
 			// value = "'" + value + "'"
 			if strings.HasSuffix(key, "_eq") {
 				fieldName := strings.TrimSuffix(key, "_eq")
@@ -96,7 +99,7 @@ func GetListHandler[T any]() gin.HandlerFunc {
 
 		var addition []gin.H
 		if request.Total {
-			total, err := service.Count[T](c, options2...) 
+			total, err := service.Count[T](c, options2...)
 			if err != nil {
 				logger.WithContext(c).WithError(err).
 					Warn("GetListHandler: getCount failed")
