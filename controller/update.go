@@ -75,7 +75,7 @@ func UpdateHandler[T orm.Model](idParam string) gin.HandlerFunc {
 			return
 		}
 
-		Event.Publish("updated"+typeName, &updatedModel)
+		Event.Publish("updated:"+typeName, &updatedModel)
 		ResponseSuccess(c, &updatedModel)
 	}
 }
