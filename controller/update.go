@@ -66,7 +66,7 @@ func UpdateHandler[T orm.Model](idParam string) gin.HandlerFunc {
 		// 获取类型的名称
 		typeName := reflect.TypeOf(model).Name()
 
-		Event.Publish("update:"+typeName, &updatedModel)
+		Event.Publish("update:"+typeName, &updatedModel, c)
 		_, err := service.Update(c, &updatedModel)
 		if err != nil {
 			logger.WithContext(c).WithError(err).
@@ -75,7 +75,7 @@ func UpdateHandler[T orm.Model](idParam string) gin.HandlerFunc {
 			return
 		}
 
-		Event.Publish("updated:"+typeName, &updatedModel)
+		Event.Publish("updated:"+typeName, &updatedModel, c)
 		ResponseSuccess(c, &updatedModel)
 	}
 }

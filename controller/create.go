@@ -33,7 +33,7 @@ func CreateHandler[T any]() gin.HandlerFunc {
 		logger.WithContext(c).Tracef("CreateHandler: Create %#v", model)
 
 		typeName := reflect.TypeOf(model).Name()
-		Event.Publish("create:"+typeName, &model)
+		Event.Publish("create:"+typeName, &model, c)
 		err := service.Create(c, &model, service.IfNotExist())
 		if err != nil {
 			logger.WithContext(c).WithError(err).
@@ -41,7 +41,7 @@ func CreateHandler[T any]() gin.HandlerFunc {
 			ResponseError(c, CodeProcessFailed, err)
 			return
 		}
-		Event.Publish("created:"+typeName, &model)
+		Event.Publish("created:"+typeName, &model, c)
 		c.JSON(200, SuccessResponseBody(model))
 	}
 }
