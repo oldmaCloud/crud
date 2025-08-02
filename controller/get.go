@@ -8,6 +8,7 @@ import (
 	"github.com/cdfmlr/crud/orm"
 	"github.com/cdfmlr/crud/service"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // GetRequestOptions is the query options (?opt=val) for GET requests:
@@ -47,6 +48,12 @@ type GetRequestOptions struct {
 //   - 200 OK: { Ts: [{...}, ...] }
 //   - 400 Bad Request: { error: "request band failed" }
 //   - 422 Unprocessable Entity: { error: "get process failed" }
+
+func FilterByLike(field string, value any) service.QueryOption {
+	return func(tx *gorm.DB) *gorm.DB {
+		return tx.Where(field+" like ?", value)
+	}
+}
 func GetListHandler[T any]() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request GetRequestOptions
@@ -69,6 +76,10 @@ func GetListHandler[T any]() gin.HandlerFunc {
 			if strings.HasSuffix(key, "_eq") {
 				fieldName := strings.TrimSuffix(key, "_eq")
 				options2 = append(options2, service.FilterBy(fieldName, value))
+				// whereClauses = append(whereClauses, fieldName+" > "+value)
+			} else if strings.HasSuffix(key, "_like") {
+				fieldName := strings.TrimSuffix(key, "_like")
+				options2 = append(options2, FilterByLike(fieldName, value))
 				// whereClauses = append(whereClauses, fieldName+" > "+value)
 			} else if strings.HasSuffix(key, "_lt") {
 				fieldName := strings.TrimSuffix(key, "_lt")
