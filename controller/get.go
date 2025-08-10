@@ -51,7 +51,11 @@ type GetRequestOptions struct {
 
 func FilterByLike(field string, value any) service.QueryOption {
 	return func(tx *gorm.DB) *gorm.DB {
-		return tx.Where(field+" like ?", value)
+		strValue, ok := value.(string)
+		if !ok {
+			return tx // return unchanged query for unsupported types
+		}
+		return tx.Where(field+" like ?", "%"+strValue+"%")
 	}
 }
 func GetListHandler[T any]() gin.HandlerFunc {
@@ -68,10 +72,11 @@ func GetListHandler[T any]() gin.HandlerFunc {
 		var options2 []service.QueryOption
 
 		for key, value2 := range c.Request.URL.Query() {
-			value := value2
 			if len(value2) < 1 || len(value2[0]) < 1 {
 				continue
 			}
+			// Extract the first value from the slice
+			value := value2[0]
 			// value = "'" + value + "'"
 			if strings.HasSuffix(key, "_eq") {
 				fieldName := strings.TrimSuffix(key, "_eq")
