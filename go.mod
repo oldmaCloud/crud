@@ -3,6 +3,7 @@ module github.com/oldmaCloud/crud
 go 1.18
 
 require (
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/cdfmlr/crud v0.0.5
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-contrib/cors v1.4.0
@@ -10,12 +11,14 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.16.0
+	gorm.io/driver/mysql v1.5.1
+	gorm.io/driver/postgres v1.5.2
 	gorm.io/driver/sqlite v1.5.3
+	gorm.io/driver/sqlserver v1.5.3
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 
 require (
-	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
@@ -59,7 +62,4 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/mysql v1.5.1 // indirect
-	gorm.io/driver/postgres v1.5.2 // indirect
-	gorm.io/driver/sqlserver v1.5.3 // indirect
 )
