@@ -4,12 +4,59 @@ import (
 	"context"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/oldmaCloud/crud/orm"
 	"github.com/oldmaCloud/crud/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
+
+// MaxPerPage 是列表接口单页返回行数的硬上限。它同时作为「未传分页参数」时的兜底，
+// 确保任何 GetList 都带 LIMIT，避免 device_tech / login_log 这类大表被整表拉出，
+// 也防止超大 perPage 滥用。消费方可在启动时覆盖此值。
+var MaxPerPage = 1000
+
+// columnCache 缓存每个模型的合法列名集合（reflect.Type -> map[string]struct{}）。
+var columnCache sync.Map
+
+// validColumns 返回模型 T 的合法数据库列名集合，用于对来自 URL 的列名（排序/过滤）
+// 做白名单校验，避免把请求里的标识符原样拼进 SQL（注入风险）。结果按类型缓存。
+func validColumns[T any]() map[string]struct{} {
+	t := reflect.TypeOf(new(T)).Elem()
+	if v, ok := columnCache.Load(t); ok {
+		return v.(map[string]struct{})
+	}
+	cols := make(map[string]struct{})
+	var namer schema.Namer = schema.NamingStrategy{SingularTable: true}
+	if orm.DB != nil {
+		namer = orm.DB.NamingStrategy
+	}
+	if s, err := schema.Parse(new(T), &sync.Map{}, namer); err == nil {
+		for _, f := range s.Fields {
+			if f.DBName != "" {
+				cols[f.DBName] = struct{}{}
+			}
+		}
+	}
+	columnCache.Store(t, cols)
+	return cols
+}
+
+// pageOption 计算受 MaxPerPage 约束的分页选项。perPage<=0（未传）或超限时一律用 MaxPerPage，
+// 因此列表查询始终带 LIMIT。
+func pageOption(request GetRequestOptions) service.QueryOption {
+	perPage := request.PerPage
+	if perPage <= 0 || perPage > MaxPerPage {
+		perPage = MaxPerPage
+	}
+	page := request.Page
+	if page < 1 {
+		page = 1
+	}
+	return service.WithPage(perPage, perPage*(page-1))
+}
 
 // GetRequestOptions is the query options (?opt=val) for GET requests:
 //
@@ -68,44 +115,52 @@ func GetListHandler[T any]() gin.HandlerFunc {
 			return
 		}
 
-		options := buildQueryOptions(request)
+		options := buildQueryOptions[T](request)
 		var options2 []service.QueryOption
 
+		// 动态过滤（field_eq / _like / _lt / _lte / _gt / _gte）。列名来自 URL，
+		// 必须先过模型列白名单，否则会把请求里的标识符原样拼进 SQL（注入风险）。
+		valid := validColumns[T]()
 		for key, value2 := range c.Request.URL.Query() {
 			if len(value2) < 1 || len(value2[0]) < 1 {
 				continue
 			}
 			// Extract the first value from the slice
 			value := value2[0]
-			// value = "'" + value + "'"
-			if strings.HasSuffix(key, "_eq") {
-				fieldName := strings.TrimSuffix(key, "_eq")
-				options2 = append(options2, service.FilterBy(fieldName, value))
-				// whereClauses = append(whereClauses, fieldName+" > "+value)
-			} else if strings.HasSuffix(key, "_like") {
-				fieldName := strings.TrimSuffix(key, "_like")
-				options2 = append(options2, FilterByLike(fieldName, value))
-				// whereClauses = append(whereClauses, fieldName+" > "+value)
-			} else if strings.HasSuffix(key, "_lt") {
-				fieldName := strings.TrimSuffix(key, "_lt")
-				options2 = append(options2, service.Where(fieldName+" < ? ", value))
-			} else if strings.HasSuffix(key, "_lte") {
-				fieldName := strings.TrimSuffix(key, "_lte")
-				options2 = append(options2, service.Where(fieldName+" <= ?", value))
-			} else if strings.HasSuffix(key, "_gt") {
-				fieldName := strings.TrimSuffix(key, "_gt")
-				options2 = append(options2, service.Where(fieldName+" > ?", value))
-			} else if strings.HasSuffix(key, "_gte") {
-				fieldName := strings.TrimSuffix(key, "_gte")
-				options2 = append(options2, service.Where(fieldName+" >= ?", value))
+			var fieldName, op string
+			switch {
+			case strings.HasSuffix(key, "_eq"):
+				fieldName, op = strings.TrimSuffix(key, "_eq"), "eq"
+			case strings.HasSuffix(key, "_like"):
+				fieldName, op = strings.TrimSuffix(key, "_like"), "like"
+			case strings.HasSuffix(key, "_lte"):
+				fieldName, op = strings.TrimSuffix(key, "_lte"), "<="
+			case strings.HasSuffix(key, "_lt"):
+				fieldName, op = strings.TrimSuffix(key, "_lt"), "<"
+			case strings.HasSuffix(key, "_gte"):
+				fieldName, op = strings.TrimSuffix(key, "_gte"), ">="
+			case strings.HasSuffix(key, "_gt"):
+				fieldName, op = strings.TrimSuffix(key, "_gt"), ">"
+			default:
+				continue
 			}
-			// 只取每个参数的第一个值
-			// if len(values) > 0 && key != "page" && key != "perPage" {
-			// 	conditions[key] = values[0]
-			// }
+			if _, ok := valid[fieldName]; !ok {
+				logger.WithContext(c).WithField("field", fieldName).
+					Warn("GetListHandler: ignore filter on unknown column")
+				continue
+			}
+			switch op {
+			case "eq":
+				options2 = append(options2, service.FilterBy(fieldName, value))
+			case "like":
+				options2 = append(options2, FilterByLike(fieldName, value))
+			default:
+				options2 = append(options2, service.Where(fieldName+" "+op+" ?", value))
+			}
 		}
 
 		options = append(options, options2...)
+		options = append(options, pageOption(request)) // 始终带上限分页，避免整表返回
 		var dest []*T
 		err := service.GetMany[T](c, &dest, options...)
 		if err != nil {
@@ -150,7 +205,7 @@ func GetByIDHandler[T orm.Model](idParam string) gin.HandlerFunc {
 			return
 		}
 
-		options := buildQueryOptions(request)
+		options := buildQueryOptions[T](request)
 
 		dest, err := getModelByID[T](c, idParam, options...)
 		if err != nil {
@@ -192,7 +247,7 @@ func GetFieldHandler[T orm.Model](idParam string, field string) gin.HandlerFunc 
 			ResponseError(c, CodeBadRequest, err)
 			return
 		}
-		options := buildQueryOptions(request)
+		options := buildQueryOptions[T](request)
 
 		model, err := getModelByID[T](c, idParam, service.Preload(field, options...))
 		if err != nil {
@@ -222,16 +277,21 @@ func GetFieldHandler[T orm.Model](idParam string, field string) gin.HandlerFunc 
 	}
 }
 
-func buildQueryOptions(request GetRequestOptions) []service.QueryOption {
+// buildQueryOptions 构造排序/过滤/预加载选项。order_by 与 filter_by 的列名来自 URL，
+// 需过模型列白名单后才使用，避免标识符注入。分页不在此处理（见 pageOption），
+// 因为 GetByID/GetField 不需要分页。
+func buildQueryOptions[T any](request GetRequestOptions) []service.QueryOption {
 	var options []service.QueryOption
-	if request.PerPage > 0 && request.Page > 0 {
-		options = append(options, service.WithPage(request.PerPage, request.PerPage*(request.Page-1)))
-	}
+	valid := validColumns[T]()
 	if request.OrderBy != "" {
-		options = append(options, service.OrderBy(request.OrderBy, request.Descending))
+		if _, ok := valid[request.OrderBy]; ok {
+			options = append(options, service.OrderBy(request.OrderBy, request.Descending))
+		}
 	}
 	if request.FilterBy != "" && request.FilterValue != "" {
-		options = append(options, service.FilterBy(request.FilterBy, request.FilterValue))
+		if _, ok := valid[request.FilterBy]; ok {
+			options = append(options, service.FilterBy(request.FilterBy, request.FilterValue))
+		}
 	}
 	for _, field := range request.Preload {
 		// logger.WithField("field", field).Debug("Preload field")
