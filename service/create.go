@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/cdfmlr/crud/orm"
+	"github.com/oldmaCloud/crud/orm"
 	"gorm.io/gorm"
 )
 

@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/cdfmlr/crud/log"
-	gin_request_id "github.com/cdfmlr/crud/pkg/gin-request-id"
+	"github.com/oldmaCloud/crud/log"
+	gin_request_id "github.com/oldmaCloud/crud/pkg/gin-request-id"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )

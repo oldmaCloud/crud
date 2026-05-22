@@ -36,7 +36,7 @@ package controller
 
 import (
 	"github.com/asaskevich/EventBus"
-	"github.com/cdfmlr/crud/log"
+	"github.com/oldmaCloud/crud/log"
 )
 
 var logger = log.ZoneLogger("crud/controller")

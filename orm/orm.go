@@ -1,7 +1,7 @@
 package orm
 
 import (
-	"github.com/cdfmlr/crud/log"
+	"github.com/oldmaCloud/crud/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 

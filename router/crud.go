@@ -2,8 +2,8 @@ package router
 
 import (
 	"fmt"
-	"github.com/cdfmlr/crud/controller"
-	"github.com/cdfmlr/crud/orm"
+	"github.com/oldmaCloud/crud/controller"
+	"github.com/oldmaCloud/crud/orm"
 	"github.com/gin-gonic/gin"
 	"reflect"
 )

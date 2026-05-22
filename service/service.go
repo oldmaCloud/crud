@@ -4,7 +4,7 @@
 // your own services with the orm.DB (a *gorm.DB) instance.
 package service
 
-import "github.com/cdfmlr/crud/log"
+import "github.com/oldmaCloud/crud/log"
 
 // TODO: use orm.Model instead of any
 

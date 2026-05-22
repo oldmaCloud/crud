@@ -6,7 +6,6 @@ toolchain go1.24.5
 
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/cdfmlr/crud v0.0.9
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.11.0

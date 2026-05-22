@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cdfmlr/crud/orm"
+	"github.com/oldmaCloud/crud/orm"
 )
 
 // Update all fields of an existing model in database.

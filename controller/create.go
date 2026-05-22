@@ -3,8 +3,8 @@ package controller
 import (
 	"reflect"
 
-	"github.com/cdfmlr/crud/orm"
-	"github.com/cdfmlr/crud/service"
+	"github.com/oldmaCloud/crud/orm"
+	"github.com/oldmaCloud/crud/service"
 	"github.com/gin-gonic/gin"
 )
 

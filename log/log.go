@@ -2,8 +2,8 @@ package log
 
 import (
 	"fmt"
-	"github.com/cdfmlr/crud/pkg/ginlogrus"
-	"github.com/cdfmlr/crud/pkg/gormlogrus"
+	"github.com/oldmaCloud/crud/pkg/ginlogrus"
+	"github.com/oldmaCloud/crud/pkg/gormlogrus"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
